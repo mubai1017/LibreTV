@@ -248,20 +248,37 @@ export async function onRequest(context) {
 
     // 获取远程内容及其类型
     async function fetchContentWithType(targetUrl) {
-        const headers = new Headers({
-            'User-Agent': getRandomUserAgent(),
-            'Accept': '*/*',
-            // 尝试传递一些原始请求的头信息
-            'Accept-Language': request.headers.get('Accept-Language') || 'zh-CN,zh;q=0.9,en;q=0.8',
-            // 尝试设置 Referer 为目标网站的域名，或者传递原始 Referer
-            'Referer': request.headers.get('Referer') || new URL(targetUrl).origin
-        });
+        // const headers = new Headers({
+        //     'User-Agent': getRandomUserAgent(),
+        //     'Accept': '*/*',
+        //     // 尝试传递一些原始请求的头信息
+        //     'Accept-Language': request.headers.get('Accept-Language') || 'zh-CN,zh;q=0.9,en;q=0.8',
+        //     // 尝试设置 Referer 为目标网站的域名，或者传递原始 Referer
+        //     'Referer': request.headers.get('Referer') || new URL(targetUrl).origin
+        // });
+
+        const headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+            'Referer': 'https://movie.douban.com/',
+            'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+        };
 
         try {
             // 直接请求目标 URL
             logDebug(`开始直接请求: ${targetUrl}`);
             // Cloudflare Functions 的 fetch 默认支持重定向
-            const response = await fetch(targetUrl, { headers, redirect: 'follow' });
+            // const response = await fetch(targetUrl, { headers, redirect: 'follow' });
+            const response = await fetch(targetUrl, { 
+                headers: headers,
+                redirect: 'follow',
+                cf: {
+                    cacheEverything: true,
+                    cacheTtl: 7200   // 缓存2小时
+                }
+            });
 
             if (!response.ok) {
                  const errorBody = await response.text().catch(() => '');
