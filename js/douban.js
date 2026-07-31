@@ -530,7 +530,18 @@ function renderDoubanCards(data, container) {
             
             // 处理图片URL
             // 1. 直接使用豆瓣图片URL (添加no-referrer属性)
-            const originalCoverUrl = item.cover;
+            let originalCoverUrl = item.cover;
+            // 【核心修复】清洗数据：如果后端强行套了 /proxy/，则把前面的 /proxy/ 裁掉并还原真实网址
+            if (originalCoverUrl && originalCoverUrl.includes('/proxy/')) {
+                // 1. 移除开头的 /proxy/ 字符串
+                let cleanPart = originalCoverUrl.replace('/proxy/', '');
+                try {
+                    // 2. 将被 UrlEncode 编码的 %3A%2F 还原为真正的 http:// 或 https://
+                    originalCoverUrl = decodeURIComponent(cleanPart);
+                } catch(e) {
+                    console.error('图片解码失败，保持原样', e);
+                }
+            }
             
             // 2. 也准备代理URL作为备选
             const proxiedCoverUrl = PROXY_URL + encodeURIComponent(originalCoverUrl);
